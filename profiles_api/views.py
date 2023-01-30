@@ -10,6 +10,10 @@ from rest_framework.authentication import TokenAuthentication
 # The token authentication is a type of authentication we use for users to authenticate themselves with our API it works by generating a random token string when the users logs in and then every request we make to that API that we need to authenticate we add this token string to the request and that's effectively a password to check that every request made is authenticated correctly 
 from profiles_api import permissions
 
+# Importing filter modules from rest_framework
+from rest_framework import filters
+# Out of the box the rest framework comes with some modules that we use to add filtering to a view.
+
 
 class HelloApiView(APIView):
     """Test API View"""
@@ -117,3 +121,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     # We can configure one or more type of authentication with a particular view set in the django rest framework. The way it works is you just add all the authentication classes to this authentication class variable.
     # Next we gonna add permissions classes so the authentication course is set how the user will authenticate that is the mechanism they will use and the permission classes say set how the user gets permissions to do certain things    
     permission_classes = (permissions.UpdateOwnProfile,)
+    # adding filters
+    filter_backends = (filters.SearchFilter,)
+    # Below filter package we need to add one more class variable called search fields. This tells the filter backend which fields we're going to make searchable by this filter site.
+    search_fields = ('name','email',)
