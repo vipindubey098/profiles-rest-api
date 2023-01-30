@@ -7,6 +7,10 @@ router = DefaultRouter()
 router.register('hello-viewset', views.HelloViewSet, base_name='hello-viewset') 
 # to register viewsets with our viewsets, we gonna access hello/viewsets, router will create all 4 urls for us, we don't need to specify, second arguments is the viewset we wish to register this url. Finally we need to specify a base name for our viewset. (hello-viewset)->This is gonna be used for retreving the url in our routers. Now add this in urlpatterns.
 
+#registering our view sets
+router.register('profile', views.UserProfileViewSet)
+
+
 urlpatterns= [
     path('hello-view/', views.HelloApiView.as_view()), 
     #as_view() - It is standard function that we call to convert our API view class to be rendered by urls.
