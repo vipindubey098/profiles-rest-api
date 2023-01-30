@@ -14,6 +14,12 @@ from profiles_api import permissions
 from rest_framework import filters
 # Out of the box the rest framework comes with some modules that we use to add filtering to a view.
 
+# Adding obtain auth token
+# This is a view that comes with Django Rest Framework, we can use to generate auth token
+from rest_framework.authtoken.views import ObtainAuthToken
+# Importing API Settings
+from rest_framework.settings import api_settings
+
 
 class HelloApiView(APIView):
     """Test API View"""
@@ -125,3 +131,13 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     # Below filter package we need to add one more class variable called search fields. This tells the filter backend which fields we're going to make searchable by this filter site.
     search_fields = ('name','email',)
+
+
+# Creating a class called userloginapiview
+class UserLoginApiView(ObtainAuthToken):
+    """Handle creating user authentication tokens"""
+    # ObtainAuthToken is provided by django, is very handy and we can add directly to a urls.py, however it does it by default enable itself in browsable django admin side. SO we need to override this class, customise it.
+    # we add a class varible called render_classes = we gonna import default renderer class from the api settings thats why we gonna need to import api settings on top of file
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    # It addes renderer_classes to our obtain auth token view which will enable in the django admin 
+    # We gonna add url to this view to enable it. Go to urls.py now
