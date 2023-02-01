@@ -39,3 +39,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
             password = validated_data['password'],
         )
         return user
+
+class ProfileFeedItemSerializer(serializers.ModelSerializer):
+    """Serializes profile feed items"""
+    class Meta:
+        model = models.ProfileFeedItem
+        fields = ('id','user_profile', 'status_text', 'created_on')
+        # So the only field that will be right on all in our serializer are in his current state are user_profile & status_text. However we don't want users to be able to set the user profile when they create a new feed item. We want to set user profile based on the user that is authenticated. SO we gonna make user_profile feed to read only. So that means that when we list the objects we can see which users created which feed items
+        extra_kwargs = {'user_profile':{'read_only':True}} # So this aloows to set user profile to readonly in model serializer
+
+# Now that we have serializer we can go ahead and create a view set for our profile feed items. Go to views.py

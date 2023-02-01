@@ -10,6 +10,7 @@ router.register('hello-viewset', views.HelloViewSet, base_name='hello-viewset')
 #registering our view sets
 router.register('profile', views.UserProfileViewSet)
 
+router.register('feed', views.UserProfileFeedViewSet)
 
 urlpatterns= [
     path('hello-view/', views.HelloApiView.as_view()), 
@@ -21,5 +22,4 @@ urlpatterns= [
 
     path('', include(router.urls)),
     # As we register routes with our routers it generates a list of urls that are associated for our viewsets. It figures out the url that are required for all of the functions that we need to use our viewset and that it generates this url list which we can pass in using the path functions and include function. The reason we specify a blank string here is because we don't want to put a prefix to this URL. We just want all of the URL in the blank part and thats how you register view sets.
-    
 ]

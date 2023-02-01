@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser  #import abstractbaseuse
 from django.contrib.auth.models import PermissionsMixin  #import permissionmixin
 # above two are the standard base classes that you need to use when overwriting or customizing the default django user model
 from django.contrib.auth.models import BaseUserManager
+from django.conf import settings #retrieve to fetch data from project settings.py. We gonna fetch AUTH_USER_MODEL from settings.py
 
 
 # Create your models here.
@@ -86,4 +87,21 @@ class UserProfile(AbstractBaseUser, PermissionsMixin): # inheriting will help to
         return self.email
 
 
+class ProfileFeedItem(models.Model):
+    """Profile status update"""
+    # So everytime they create a new update it's going to create a new profile feed item object and associate that object with the user that created it the way you link models to other models in Django is you use what's called a foreign key, when you use the foreign key field it sets up a foreign key relationship in a db to a remote model.
+    # Benefits of doing this is that it allows you to ensure that the integrity of the db is maintained so you can never create a profile feed item for a user profile that doesn't exist.
+    user_profile = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE, 
+        # What to do if model field is deleted. If user gets delete then its post to get delete
+    )
+    status_text = models.CharField(max_length=255)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        """Return the model as string"""
+        return self.status_text
+    # Now as we added profile feed item model we need to register this model in the Django admin so we can manage the objects in this table through the django admin interface. Go to admin.py and register ProfileFeedItem in admin.py
 

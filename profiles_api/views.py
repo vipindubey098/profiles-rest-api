@@ -9,16 +9,21 @@ from profiles_api import models
 from rest_framework.authentication import TokenAuthentication 
 # The token authentication is a type of authentication we use for users to authenticate themselves with our API it works by generating a random token string when the users logs in and then every request we make to that API that we need to authenticate we add this token string to the request and that's effectively a password to check that every request made is authenticated correctly 
 from profiles_api import permissions
-
 # Importing filter modules from rest_framework
 from rest_framework import filters
 # Out of the box the rest framework comes with some modules that we use to add filtering to a view.
-
 # Adding obtain auth token
 # This is a view that comes with Django Rest Framework, we can use to generate auth token
 from rest_framework.authtoken.views import ObtainAuthToken
 # Importing API Settings
 from rest_framework.settings import api_settings
+# from rest_framework.permissions import IsAuthenticatedOrReadOnly
+# As the name suggest this(IsAuthenticatedOrReadOnly) make sure a view site is read only if the user is not authenticated.
+
+# Without authentication no one can we or write also
+# We can remove IsAuthenticatedOrReadOnly or replace it with IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+# It blocks access to entire endpoint unless the user is authenticated.
 
 
 class HelloApiView(APIView):
@@ -141,3 +146,33 @@ class UserLoginApiView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
     # It addes renderer_classes to our obtain auth token view which will enable in the django admin 
     # We gonna add url to this view to enable it. Go to urls.py now
+
+
+class UserProfileFeedViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading & updating profile feed items"""
+    # We gonna use token authentocation to authenticate requests to out endpoint
+    authentication_classes = (TokenAuthentication,)
+    # We gonna set the serializer class to serialize that we created previously.
+    serializer_class = serializers.ProfileFeedItemSerializer
+    # So this sets these serialize a class on our view set to the profile feed items serialize
+    # Next we gonna assign the query set that's going to be managed through our view set.
+    queryset = models.ProfileFeedItem.objects.all()
+    # SO we going to manage all our profile feed item objects from our model in our view set. It wil sets up basic model view set that allows us to create and manage feed item objects in db
+    # However as we said we want to set this user_profile from serializers.py to read only because we are going to set it based on the authenticated user in order to do that we need to add a perform create function to our model view set.
+    # We gonna add a new permission that comes with django rest framework import on top -> from rest_framework.permissions import IsAuthenticatedOrReadOnly 
+    # Add a new class variable 
+    permission_classes = (
+        permissions.UpdateOwnStatus,
+        # IsAuthenticatedOrReadOnly,
+        IsAuthenticated, # we can limit the api to authenticated user only, now no one can see or write if we run with authentication
+    )
+
+    def perform_create(self, serializer):
+        """Sets the profile to the logged in user"""
+        # Perform_create is a handy feature of django rest framework that allows you to override the behavior or customize the behavior for creating objects through a model view sets. So when a request gets made to our view sets it gets passed in to our serialized class and validated an then serialzer dot save function is called by default
+        # If we need to customize the logic for creating an object then we can do this using they perform create function.
+        # So this perform_create function will get call every time you do http post tou our view sets
+        serializer.save(user_profile=self.request.user)
+        # Explain above line : So when a new object is created in django rest framework cores perform create and it passes in the serializer that we are using to create the object the serializer is a model serializer. user_profile coloumn value will be requested or login user in db
+        # Lets head over to urls.py to lin up our new view sets to a url.
+
