@@ -126,4 +126,19 @@ That's all the configuartion changes we need to do we need to run one more comma
 - Go to settings.py in our project. FInd ALLOWED_HOSTS = []
 # ALLOWED_HOSTS allows us to enable access via specific domain names it;s a security feature to make sure that if somebody just finds a random IP address for our server they can't access the application unless they use a valid hostname so we need to specify the host names that we want to allow to connect to our server in the allowed hosts option
 # The hostname we want to add is for our server which is easy for configuration
-# On AWS DASHBOARD go to ec2, select our ec2 server, then if we see down Public DNS (IPv4), So copy that and then go to settings.py
+# On AWS DASHBOARD go to ec2, select our ec2 server, then if we see down Public DNS (IPv4), So copy that and then go to settings.py and paste it under eg:
+- ALLOWED_HOSTS = ['ec2-18-130-20-217.eu-west-2.compute.amazonaws.com', '127.0.0.1'] then save the file
+# We also need to add localhost so it should work on localserver too
+
+# How to update on server after we push it into github
+# After changes have uploaded to server, we can now run our update script to pull the changes.
+# First connect with ssh
+ssh ubuntu@ec2-18-130-20-217.eu-west-2.compute.amazonaws.com
+# NAvigate location on the server where our project is stored 
+type:
+cd /usr/local/apps/profile-rest-api and hit enter
+
+Now type on terminal while on server:
+sudo sh ./deploy/update.sh
+# This is the command that will run the updates script that will update the application based on the latest, then run all the commands that are necessary to run the server.
+
