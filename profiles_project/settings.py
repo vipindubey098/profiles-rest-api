@@ -28,7 +28,14 @@ DEBUG = bool(int(os.environ.get('DEBUG', 1)))
 # What this does is it pulls in the value of the environment variable called debug we set this environment variable called debug we set this environment variable here in the supervisor file so you can see in the supervisor at the top of the configuration so in supervisor_profiles_api.conf we have kept DEBUG = 0. This sets the debug environment variable to zero when we run our application. So when we pull DEBUG then by default all environment variables are strings so there's no way to specify an integer as an environment variable, so we need to use this end function to convert our string of a one value or zero value to an integer and then we use the bool function to convert this to a boolean. The way python billions work is zero will convert into a false and a one will convert into a True, that's why we have 1 after DEBUG, because this is the default value. If the debug setting doesn't exist. 
 # When we run our server on our local machine it's gonna be in debug mode, but then when it's running on our server debug mode is gonna be disabled.
 
-ALLOWED_HOSTS = []
+
+# Next we are going to update the allowed hosts setting in our Django configuartion to fix Bad Request (400):
+# Go to settings.py in our project. FInd ALLOWED_HOSTS = []
+# ALLOWED_HOSTS allows us to enable access via specific domain names it;s a security feature to make sure that if somebody just finds a random IP address for our server they can't access the application unless they use a valid hostname so we need to specify the host names that we want to allow to connect to our server in the allowed hosts option
+# The hostname we want to add is for our server which is easy for configuration
+# On AWS DASHBOARD go to ec2, select our ec2 server, then if we see down Public DNS (IPv4), So copy that and then go to settings.py and paste it under eg:
+ALLOWED_HOSTS = ['ec2-18-130-20-217.eu-west-2.compute.amazonaws.com', '127.0.0.1']
+# ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -126,4 +133,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-AUTH_USER_MODEL = 'profiles_api.UserProfile'  #conficuring custom user model in django
+AUTH_USER_MODEL = 'profiles_api.UserProfile'  #configuring custom user model in django
+
+STATIC_ROOT = 'static/'

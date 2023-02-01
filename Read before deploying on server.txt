@@ -120,3 +120,10 @@ That's all the configuartion changes we need to do we need to run one more comma
 # So when you send a file to server defined as to have the permissions to be executable if you want to run it as executable script we can do that by opeming up the terminal or the get bash window
 - chmod +x deploy/*.sh
 # It runs chmod command to set executable to any file that ends with .sh in our deploy directory i.e. our setup.sh, update.sh command file
+
+
+# Next we are going to update the allowed hosts setting in our Django configuartion to fix Bad Request (400):
+- Go to settings.py in our project. FInd ALLOWED_HOSTS = []
+# ALLOWED_HOSTS allows us to enable access via specific domain names it;s a security feature to make sure that if somebody just finds a random IP address for our server they can't access the application unless they use a valid hostname so we need to specify the host names that we want to allow to connect to our server in the allowed hosts option
+# The hostname we want to add is for our server which is easy for configuration
+# On AWS DASHBOARD go to ec2, select our ec2 server, then if we see down Public DNS (IPv4), So copy that and then go to settings.py
