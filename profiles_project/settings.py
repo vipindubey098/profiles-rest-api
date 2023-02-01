@@ -23,7 +23,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'op8@&m1chl+!0!z)h8eqascpy*+5iq7h@+)k+pq$@11bhic)e8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+# What this does is it pulls in the value of the environment variable called debug we set this environment variable called debug we set this environment variable here in the supervisor file so you can see in the supervisor at the top of the configuration so in supervisor_profiles_api.conf we have kept DEBUG = 0. This sets the debug environment variable to zero when we run our application. So when we pull DEBUG then by default all environment variables are strings so there's no way to specify an integer as an environment variable, so we need to use this end function to convert our string of a one value or zero value to an integer and then we use the bool function to convert this to a boolean. The way python billions work is zero will convert into a false and a one will convert into a True, that's why we have 1 after DEBUG, because this is the default value. If the debug setting doesn't exist. 
+# When we run our server on our local machine it's gonna be in debug mode, but then when it's running on our server debug mode is gonna be disabled.
 
 ALLOWED_HOSTS = []
 

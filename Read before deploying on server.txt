@@ -1,0 +1,122 @@
+We gonna add a SSH Key pair to AWS:
+on terminal machine:
+cat ~/.ssh/id_rsa.pub
+
+Then hit enter, here we will get an ssh key copy that, then open up browser on go to aws
+
+Aws Dashboard:
+- Click on services
+- Then click on EC2 #EC2 is were key pairs will be added
+- On left side menu scroll down and find key pairs under Network and security, click on key pairs
+- Here we will import a key pair as we have created a public key and private key.
+- Click on Import key pair
+- Give it a name eg: vipin-desktop
+- Under public key contents: paste SSH key which we have generated on terminal. From SSH-rsa till email id
+- Click on Import. # This will import our key to aws.
+
+# We will create an EC2 server instance to run our projects
+- Open up AWS Console.
+- Select services
+- Click on EC2
+- Click on Launch Instance.
+- We will choose Ubuntu OS. copy these -> ami-07dc734dc14746eab , copy these ami code and paste on search on first page. It will show you Ubuntu server 18.04 LTS (HVM), SSD Volume Type.
+- Click on that ubuntu image.
+- Select t2.micro
+- Click on next, on configure Security Group we will do some configuration # We gonna http access to the instance by default port 22 is open, we also want to open port 80
+- On Configure security group tab add new rule.
+- On Type choose HTTP, Protocol: TCP, Post range: 80
+- Click review and launch
+- On review and launch click on launch after that create a key pair so we will select key pair -> vipin-desktop, which i have created above.
+
+
+
+# Add deployment script and config our projects
+https://drive.google.com/file/d/1axRytyrpIAUN5K_LOyMnIlr5ZwdXBglV/view
+- Download file from above link
+- Above files contains scripts and configuration file that we need to deploy on our project
+- Once you have unzip the file copy that folder to our profile api projects
+- Inside deploy folder
+--- setup.sh  -> we use to setup our server
+# Before we can run this we need to update these projects git url to our github url in setup.sh. This is because the script is going to clone the content of our project to the server when we run it. So we need to make sure that this is correct with the project. 
+# replace https://github.com/CHANGEME.git to https://github.com/vipindubey098/profiles-rest-api.git
+# Now what does this script does: setup.sh: At top of the script we set some variables:
+PROJECT_GIT_URL = Where we set our github url variable.
+PROJECT_BASE_URL = It is the directory we are going to store our project on the server path: '/usr/local/apps/profiles-rest-api' -> This is the path where are going to clone the project to the server and it is where all of our source code is gonna be kept.
+# Next we install some dependencies which we need to run our application on the server.
+# apt-get install -y python3-dev python3-venv sqlite python-pip supervisor nginx git
+# Git is going help to clone the project. nginx is the web server that is gonna serve the static files and act as a proxy to our server. Then ofcourse python & pip which is the package manager that we're gonna use to install the packages and we have sqlite which we gonna use for db and then we have python3 virtual environment which is gonna be used to set up our virtual environment. Finally we have python3 dev which is gonna be used to run python on the server.
+
+- mkdir -p $PROJECT_BASE_PATH -> # Next we do is we create a directory to the projects you are out or the location on the server that we want to create the store the project files so we need to create the project before we can claim it because the next thing we do is use git to clone the projects from our git url to base location where we want to store the code.
+
+- git clone $PROJECT_GIT_URL $PROJECT_BASE_PATH -> # This gonna do a git clone and pull the source code down to the server.
+
+# Next we will create a virtual environment
+- mkdir -p $PROJECT_BASE_PATH/env
+- python3 -m venv $PROJECT_BASE_PATH/env
+
+# Next we will install python packages:
+- $PROJECT_BASE_PATH/env/bin/pip install -r $PROJECT_BASE_PATH/requirements.txt
+- $PROJECT_BASE_PATH/env/bin/pip install uwsgi==2.0.18
+#uwsgi is python daemon for running python code as a web server.
+
+# Next we run the migrations which we've done a number of times.
+- cd $PROJECT_BASE_PATH
+- $PROJECT_BASE_PATH/env/bin/python manage.py migrate
+- $PROJECT_BASE_PATH/env/bin/python manage.py collectstatic --noinput
+# collectstatic will gather all of the static files for all of the apps in our project into one directory. When you use the django management server it does this automatically for you. But since we are not gonna be using the django development server on production we need to create a location with all of the static files that we can use to serve the css and javascript for the Django admin and django rest framework API
+
+# Next we gonna configure supervisor:
+# Supervisor is a application on linux that allows you to manage processes. This is what's going to manage our python process or our uswg server. So what we do here is we copy the supervisor profiles API configuration congif file into the location 
+- cp $PROJECT_BASE_PATH/deploy/supervisor_profiles_api.conf /etc/supervisor/conf.d/profiles_api.conf
+# Above command will copy location from $PROJECT_BASE_PATH/deploy/supervisor_profiles_api.conf to /etc/supervisor/conf.d/profiles_api.conf
+# Then we run read to update the supervisor configuration files and then we run update to update all the processes.
+# Next we restart our profiles API to make sure that our service is started finally we can figure out.
+
+# Next we gonna configure nginx:
+- cp $PROJECT_BASE_PATH/deploy/nginx_profiles_api.conf /etc/nginx/sites-available/profiles_api.conf
+# This is the web server that's gonna be used to serve the static files. So we need to create a location for the configuartion file and we copy the configuration file that we have added here. nginx profiles API don't come to these sites available directory in nginx. 
+- rm /etc/nginx/sites-enabled/default
+# Then we remove the default configuration as provided when you install nginx.
+- ln -s /etc/nginx/sites-available/profiles_api.conf /etc/nginx/sites-enabled/profiles_api.conf
+# We add a symbolic link from our sites available to our sites enabled our site.
+- systemctl restart nginx.service
+# Finally we restart our nginx service and the the script exits with this message here saying done.
+
+
+
+update.sh:
+# Here we have also have an update script which is gonna be used to update the code on the server whenever we make a change.
+# So the setup script will be used the first time we set up the server but it would only work once the service setup, you need to use the update script to pull updates or changes from get onto the server.
+
+- PROJECT_BASE_PATH='/usr/local/apps/profiles-rest-api'
+# Here we have project base path which is the location on the server where the source code gonna be kept.
+- git pull
+- $PROJECT_BASE_PATH/env/bin/python manage.py migrate
+- $PROJECT_BASE_PATH/env/bin/python manage.py collectstatic --noinput
+- supervisorctl restart profiles_api
+# Then we run git pull, then we run migrate in our virtual environment an then we run the collect static in case you've added any new dependencies that add any more static files. FInally we restart our supervisor process to make chnages come into effect.
+
+That's all we need to do for the deploy configuration.
+Next we are going to make some changes to our settings file it to run better on the server so open settings.py
+- The first change we gonna make is disable this debug mode.
+
+# It's the best practice never run server in debug mode when it's publicly accessible. It's fine when you are running it on local machine because its unlikely that anyone else is gonna be able to connect to server but you shoul never run it when it's on a puublicly accessible server because it opens youup to vulnerabilities. When you run a server in debug mode that means that is there's any errors or exceptions in the API it will retain a full stack trace on the screen. This can reveal secret information like the Django secret file or other things that may make server vulnerable.
+# So it's best practice to always disable this in production because we want to run it. 
+# We are going to add some logic here to in the configuration form an environment variable so type DEBUG = bool(int(os.environ.get('DEBUG', 1))
+- DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+# What this does is it pulls in the value of the environment variable called debug we set this environment variable called debug we set this environment variable here in the supervisor file so you can see in the supervisor at the top of the configuration so in supervisor_profiles_api.conf we have kept DEBUG = 0. This sets the debug environment variable to zero when we run our application. So when we pull DEBUG then by default all environment variables are strings so there's no way to specify an integer as an environment variable, so we need to use this end function to convert our string of a one value or zero value to an integer and then we use the bool function to convert this to a boolean. The way python billions work is zero will convert into a false and a one will convert into a True, that's why we have 1 after DEBUG, because this is the default value. If the debug setting doesn't exist. 
+# When we run our server on our local machine it's gonna be in debug mode, but then when it's running on our server debug mode is gonna be disabled.
+
+The next change we need to do is add a static route to the bottom of our configuration
+So under settings.py at last add:
+- STATIC_ROOT = 'static/'
+Save settings.py 
+
+# Now go to setup.sh
+- $PROJECT_BASE_PATH/env/bin/python manage.py collectstatic --noinput
+# We can see if we run this collect static command. Now we need to tell Django where to store the static files when we run this command. So we do this by setting this STATIC_ROUTE = 'static/'.
+
+That's all the configuartion changes we need to do we need to run one more command to make sure that these setup scripts are executable.
+# So when you send a file to server defined as to have the permissions to be executable if you want to run it as executable script we can do that by opeming up the terminal or the get bash window
+- chmod +x deploy/*.sh
+# It runs chmod command to set executable to any file that ends with .sh in our deploy directory i.e. our setup.sh, update.sh command file
